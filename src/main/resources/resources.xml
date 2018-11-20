@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-amqp="http://www.springframework.org/schema/integration/amqp"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/integration/amqp 
+    http://www.springframework.org/schema/integration/amqp/spring-integration-amqp.xsd
+    http://www.springframework.org/schema/rabbit 
+    http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd
+    http://www.springframework.org/schema/context 
+  http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<!-- bean definitions here -->
+
+	<context:property-placeholder location="classpath*:rabbitmq.properties" />
+
+	<rabbit:admin id="amqpAdmin" connection-factory="rabbitConnectionFactory" />
+
+	<rabbit:connection-factory id="rabbitConnectionFactory"
+		host="${rabbitmq.addresses}" username="${rabbitmq.username}" password="${rabbitmq.password}" />
+	<rabbit:template id="amqpTemplate" connection-factory="rabbitConnectionFactory" />
+
+  <bean id="jackson"
+    class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter" />
+
+<!--  <int:channel id="channel_normal" />
+  <int:channel id="channel_normal_adapter" />
+
+  <int:bridge input-channel="channel_normal" output-channel="channel_normal_adapter"/>-->
+
+
+  <int-amqp:channel id="channel_normal"
+    connection-factory="rabbitConnectionFactory" message-driven="false" queue-name="channel_normal_test"
+    auto-startup="true" extract-payload="true" />
+
+  <int-amqp:inbound-channel-adapter id="channel_normal_adapter"
+    connection-factory="rabbitConnectionFactory" queue-names="channel_normal_test" acknowledge-mode="AUTO"
+    concurrent-consumers="1" />
+
+  <!--extract-payload="true"-->
+  <!--message-converter="jackson"-->
+
+  <rabbit:queue name="channel_normal_test" />
+
+</beans>
